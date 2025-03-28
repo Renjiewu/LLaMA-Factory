@@ -1,0 +1,41 @@
+model_name_or_path: Qwen/Qwen2-VL-2B-Instruct
+# adapter_name_or_path: output/qwen2_vl-7b/dora/dora_r32_ep3
+# adapter_name_or_path: output/qwen2_vl-7b/dora/dora_r32_ep3_explain
+adapter_name_or_path: output/qwen2_vl-2b/dora/dora_r256_ep3_explainv2_dia
+
+### method
+stage: sft
+do_train: false
+do_predict: true # 指定进行预测, 不训练
+predict_with_generate: true
+finetuning_type: lora
+
+### dataset
+# eval_dataset: mire_eval_split_img, mire_eval_split_dia  #修改为测试集
+# eval_dataset: mire_explain_enhance_eval_img, mire_explain_enhance_eval_dia  #修改为测试集
+eval_dataset: mire_explain_enhance2_eval_dia  #修改为测试集
+template: qwen2_vl
+cutoff_len: 4500
+max_samples: 10000
+overwrite_cache: true
+preprocessing_num_workers: 16 # 这个只会影响内存
+
+
+### output
+output_dir: output/qwen2_vl-2b/dora/sft-infer-dora_r256_ep3_explainv2_dia #修改为保存地址
+logging_steps: 20
+overwrite_output_dir: true
+
+
+### eval
+per_device_eval_batch_size: 4  # A100显存充足，可以适当提高batch size
+flash_attn: fa2
+
+### generation
+max_new_tokens: 128
+do_sample: false
+# temperature: 0.0 # 不设置
+# top_k: 1
+# use_flash_attention_2: true    # 启用flash attention 2加速
+# torch_dtype: bfloat16         # 使用bfloat16进行推理
+use_cache: true              # 启用KV cache
