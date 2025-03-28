@@ -1,0 +1,83 @@
+### model
+# model_name_or_path: Qwen/Qwen2-VL-7B-Instruct
+model_name_or_path: output/qwen2_vl-7b/full/sft-ep3
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+resume_from_checkpoint: false
+# resume_from_checkpoint: true
+
+# 建议添加以下LoRA特定参数
+lora_rank: 32       # LoRA秩，可以尝试8-32之间
+lora_alpha: 64      # LoRA alpha值，通常设置为rank的4倍
+lora_dropout: 0.1   # LoRA dropout率
+lora_target: all
+
+### dataset
+# dataset: mllm_demo,identity,alpaca_en_demo  # video: mllm_video_demo
+# template: qwen2_vl
+# cutoff_len: 2048
+# max_samples: 1000
+# overwrite_cache: true
+# preprocessing_num_workers: 16
+
+# dataset: mire_format_enhance_dia,mire_format_enhance_mask_dia,mire_format_enhance_noise_dia,mire_format_enhance_img,mire_format_enhance_mask_img,mire_format_enhance_noise_img  # video: mllm_video_demo
+# dataset: mire_train_split_img,mire_train_split_mask_img,mire_train_split_noise_img,mire_train_split_dia,mire_train_split_mask_dia,mire_train_split_noise_dia  # video: mllm_video_demo
+# dataset: mire_explain_enhance_img,mire_explain_enhance_dia,mire_explain_enhance_mask_img,mire_explain_enhance_mask_dia,mire_explain_enhance_noise_img,mire_explain_enhance_noise_dia  # video: mllm_video_demo
+dataset: mire_explain_enhance2_img,mire_explain_enhance2_dia,mire_explain_enhance2_mask_img,mire_explain_enhance2_mask_dia,mire_explain_enhance2_noise_img,mire_explain_enhance2_noise_dia  # video: mllm_video_demo
+template: qwen2_vl
+cutoff_len: 4096
+max_samples: 10000
+overwrite_cache: true
+preprocessing_num_workers: 16
+
+### output
+output_dir: output/qwen2_vl-7b/dora/dora_r32_ep3_explainv2_with_full
+# output_dir: saves/qwen2_vl-7b/lora/sft-default
+logging_steps: 10
+save_steps: 0
+plot_loss: true
+overwrite_output_dir: true
+
+# logging_steps: 1
+# save_steps: 0.2
+# plot_loss: true
+# overwrite_output_dir: true
+
+### train
+use_dora: true
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 2
+learning_rate: 1.0e-4
+num_train_epochs: 3
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+fp16: true
+# torch_dtype: float16 # 显式指定dtype
+# device_map: auto # 自动分配设备
+ddp_timeout: 180000000 # 设置ddp超时时间
+ddp_find_unused_parameters: false # 查找未使用的参数
+# 性能优化
+gradient_checkpointing: false  # 节省显存
+# fp16_full_eval: true         # 评估时使用fp16
+torch_compile: true          # 使用PyTorch 2.0编译优化
+
+# 建议添加以下配置
+max_grad_norm: 1.0      # 梯度裁剪，防止梯度爆炸
+weight_decay: 0.01      # 权重衰减，有助于防止过拟合
+
+### eval
+# val_size: 0.1
+# per_device_eval_batch_size: 8
+# eval_strategy: steps
+# eval_steps: 0.05
+
+flash_attn: fa2
+# deepspeed: examples/deepspeed/ds_z3_offload_config.json
+deepspeed: examples/deepspeed/ds_z2_config.json
+# deepspeed: examples/deepspeed/ds_z2_offload_config.json
+
+report_to: wandb
+run_name: wrj_qwenvl # optional

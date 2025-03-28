@@ -1,0 +1,58 @@
+services:
+  llamafactory:
+    image: dockerhub.datagrand.com/baize/llamafactory:vllm-v074-gptqmodel-v190
+    build:
+      dockerfile: ./docker/docker-cuda/Dockerfile
+      context: ../..
+      args:
+        INSTALL_BNB: false
+        INSTALL_VLLM: false
+        INSTALL_DEEPSPEED: true
+        INSTALL_FLASHATTN: true
+        INSTALL_LIGER_KERNEL: false
+        INSTALL_HQQ: false
+        INSTALL_EETQ: false
+        PIP_INDEX: https://repo.huaweicloud.com/repository/pypi/simple
+    container_name: llamafactory
+    environment:
+      - HF_ENDPOINT=https://hf-mirror.com
+    volumes:
+      - ../../hf_cache:/root/.cache/huggingface
+      - ../../ms_cache:/root/.cache/modelscope
+      - ../../om_cache:/root/.cache/openmind
+      - ../../data:/app/data
+      - ../../output:/app/output
+      - ../../examples:/app/examples
+      - ../../run:/app/run
+      - ../../scripts:/app/scripts
+      - ../../.vscode-server:/root/.vscode-server
+      - ../../.vscode:/app/.vscode
+      - /mnt/text_mining_group/hujiajie/data/models:/data/models
+      - /mnt/text_mining_group/hujiajie/data/dataset:/data/dataset
+    ports:
+      - "37860:7860"
+      - "38000:8000"
+      - "38001:8001"
+    ipc: host
+    tty: true
+    shm_size: '16gb'
+    stdin_open: true
+    entrypoint: "bash"
+    # command: bash
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: "all"
+            capabilities: [gpu]
+    restart: unless-stopped
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    environment:
+      - OPENAI_API_BASE_URLS=http://llamafactory:7860;http://llamafactory:8000;http://llamafactory:8001
+      - OPENAI_API_KEYS=sk-124781258123;sk-4389759834759834;sk-345
+    ports:
+      - "38008:8080"
+    volumes:
+      - ../../web_ui_data:/app/backend/data
