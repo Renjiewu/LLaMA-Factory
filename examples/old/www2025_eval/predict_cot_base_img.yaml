@@ -1,0 +1,35 @@
+### model
+model_name_or_path: Qwen/Qwen2-VL-7B-Instruct
+# adapter_name_or_path: output/qwen2_vl-7b/lora/sft-default #修改为训练后的checkpoint
+# adapter_name_or_path: output/qwen2_vl-7b/lora/sft-default-split-dia #修改为训练后的checkpoint
+
+### method
+stage: sft
+do_train: false
+do_predict: true
+predict_with_generate: true
+# finetuning_type: full
+
+### dataset
+eval_dataset: mire_cot_base_img  #修改为测试集
+template: qwen2_vl
+cutoff_len: 4500
+max_samples: 10000
+overwrite_cache: true
+preprocessing_num_workers: 16
+
+
+### output
+output_dir: output/qwen2_vl-7b/lora/sft-infer-cot-base-img #修改为保存地址
+logging_steps: 1
+overwrite_output_dir: true
+
+
+### eval
+per_device_eval_batch_size: 4
+
+### generation
+max_new_tokens: 128
+temperature: 0.1
+top_k: 1
+

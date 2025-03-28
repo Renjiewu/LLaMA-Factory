@@ -176,4 +176,9 @@ output/
 wandb/
 swanlog/
 generated_predictions.jsonl
+
+
+output
+.vscode
+.vscode-server
 predictions_score.json
