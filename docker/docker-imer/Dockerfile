@@ -91,7 +91,7 @@ RUN pip uninstall -y transformer-engine flash-attn && \
     fi
 
 # RUN git clone -b v1.9.0 --depth=1 https://kkgithub.com/ModelCloud/GPTQModel.git && cd GPTQModel && rm -rf .git && pip install --use-pep517 -vvv --no-build-isolation -e .
-RUN pip install -v gptqmodel==2.1.0 --no-build-isolation
+RUN pip install -v gptqmodel==2.1.0 --no-build-isolation && pip install numpy==1.26.4
 
 # Unset http proxy
 RUN if [ -n "$HTTP_PROXY" ]; then \
