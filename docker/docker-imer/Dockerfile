@@ -49,7 +49,7 @@ RUN pip config set global.index-url "$PIP_INDEX" && \
 # Copy the rest of the application into the image
 COPY . /app
 
-RUN apt install -y cuda-nvcc-12-1 && pip install webdav4 wandb
+RUN apt install -y cuda-nvcc-12-4 && pip install webdav4 wandb
 
 # Install the LLaMA Factory
 RUN EXTRA_PACKAGES="metrics"; \
