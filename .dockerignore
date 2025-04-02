@@ -13,3 +13,6 @@ output
 .dockerignore
 .gitattributes
 .gitignore
+
+.vscode-server
+web_ui_data

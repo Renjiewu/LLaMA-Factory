@@ -89,14 +89,14 @@
 #    -tp 1 \
 # --num-scheduler-steps 8 \
 # NCCL_P2P_DISABLE=1
-PYTHONPATH=/app VLLM_USE_V1=1 CUDA_VISIBLE_DEVICES=6,7 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
+PYTHONPATH=/app VLLM_USE_V1=0 CUDA_VISIBLE_DEVICES=6,7 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
     "Qwen/QwQ-32B-AWQ" \
     --load-format auto \
     --quantization awq \
     --max-model-len 32000 \
     --dtype float16 \
     --gpu-memory-utilization 0.99 \
-    --max_num_seqs 6 \
+    --max_num_seqs 12 \
     -tp 2 \
     --host 0.0.0.0 \
     --port 7860
