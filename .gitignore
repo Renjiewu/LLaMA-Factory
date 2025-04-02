@@ -181,3 +181,4 @@ generated_predictions.jsonl
 output
 .vscode
 .vscode-server
+web_ui_data
