@@ -2,7 +2,7 @@ services:
   llamafactory:
     image: dockerhub.datagrand.com/baize/llamafactory:vllm-v082-gptqmodel-v210
     build:
-      dockerfile: ./docker/docker-cuda/Dockerfile
+      dockerfile: ./docker/docker-imer/Dockerfile
       context: ../..
       args:
         INSTALL_BNB: false
