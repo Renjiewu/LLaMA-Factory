@@ -1,6 +1,6 @@
 services:
   llamafactory:
-    image: dockerhub.datagrand.com/baize/llamafactory:vllm-v074-gptqmodel-v190
+    image: dockerhub.datagrand.com/baize/llamafactory:vllm-v082-gptqmodel-v210
     build:
       dockerfile: ./docker/docker-cuda/Dockerfile
       context: ../..
