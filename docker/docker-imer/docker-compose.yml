@@ -33,9 +33,15 @@ services:
       - "37860:7860"
       - "38000:8000"
       - "38001:8001"
+      - "38002:8002"
+      - "38003:8003"
+      - "38004:8004"
+      - "38005:8005"
+      - "38006:8006"
+      - "38007:8007"
     ipc: host
     tty: true
-    shm_size: '16gb'
+    shm_size: '64gb'
     stdin_open: true
     entrypoint: "bash"
     # command: bash
@@ -47,12 +53,12 @@ services:
             count: "all"
             capabilities: [gpu]
     restart: unless-stopped
-  openwebui:
-    image: ghcr.io/open-webui/open-webui:main
-    environment:
-      - OPENAI_API_BASE_URLS=http://llamafactory:7860;http://llamafactory:8000;http://llamafactory:8001
-      - OPENAI_API_KEYS=sk-124781258123;sk-4389759834759834;sk-345
-    ports:
-      - "38008:8080"
-    volumes:
-      - ../../web_ui_data:/app/backend/data
+  # openwebui:
+  #   image: ghcr.io/open-webui/open-webui:main
+  #   environment:
+  #     - OPENAI_API_BASE_URLS=http://llamafactory:7860;http://llamafactory:8000;http://llamafactory:8001
+  #     - OPENAI_API_KEYS=sk-124781258123;sk-4389759834759834;sk-345
+  #   ports:
+  #     - "38008:8080"
+  #   volumes:
+  #     - ../../web_ui_data:/app/backend/data
