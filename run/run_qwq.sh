@@ -91,15 +91,15 @@
 # NCCL_P2P_DISABLE=1
 # --distributed-executor-backend="ray" \
 # --no-enable-prefix-caching
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0,1 VLLM_USE_V1=0 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=5 VLLM_USE_V1=0 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
     "Qwen/QwQ-32B-AWQ" \
     --load-format auto \
     --quantization awq \
     --max-model-len 32000 \
     --dtype float16 \
     --gpu-memory-utilization 0.96 \
-    --max_num_seqs 16 \
-    --pipeline_parallel_size 1 \
-    --tensor_parallel_size 2 \
+    --max_num_seqs 8 \
+    -pp 1 \
+    -tp 1 \
     --host 0.0.0.0 \
     --port 7860
