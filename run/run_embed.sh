@@ -7,14 +7,15 @@
  # @FilePath: /LLaMA-Factory/run/run.sh
  # @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 ### 
+# # --served-model-name "my_model_name"
 # "Alibaba-NLP/gte-Qwen2-1.5B-instruct" \
 # "BAAI/bge-m3"
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=3 NCCL_P2P_DISABLE=1 vllm serve \
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=4 NCCL_P2P_DISABLE=1 vllm serve \
     "Alibaba-NLP/gte-Qwen2-1.5B-instruct" \
     --task embedding \
     --max-model-len 8192 \
     --trust-remote-code \
-    --gpu-memory-utilization 0.99 \
+    --gpu-memory-utilization 0.07 \
     --max_num_seqs 16 \
     --host 0.0.0.0 \
     --port 8001
