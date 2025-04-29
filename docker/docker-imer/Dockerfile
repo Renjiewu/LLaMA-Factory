@@ -2,7 +2,8 @@
 # https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/index.html
 # ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:24.02-py3
 # ARG BASE_IMAGE=vllm/vllm-openai:v0.7.3
-ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.4
+# ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.4
+ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.5
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]
