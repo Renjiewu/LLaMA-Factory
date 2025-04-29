@@ -2,7 +2,7 @@
 # https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/index.html
 # ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:24.02-py3
 # ARG BASE_IMAGE=vllm/vllm-openai:v0.7.3
-ARG BASE_IMAGE=vllm/vllm-openai:v0.8.3
+ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.4
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]
@@ -91,7 +91,7 @@ RUN pip uninstall -y transformer-engine flash-attn && \
     fi
 
 # RUN git clone -b v1.9.0 --depth=1 https://kkgithub.com/ModelCloud/GPTQModel.git && cd GPTQModel && rm -rf .git && pip install --use-pep517 -vvv --no-build-isolation -e .
-RUN pip install -v gptqmodel==2.2.0 --no-build-isolation && pip install numpy==2.1.3
+# RUN pip install -v gptqmodel==2.2.0 --no-build-isolation && pip install numpy==2.1.3
 
 # Unset http proxy
 RUN if [ -n "$HTTP_PROXY" ]; then \
