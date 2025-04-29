@@ -89,17 +89,19 @@
 #    -tp 1 \
 # --num-scheduler-steps 8 \
 # NCCL_P2P_DISABLE=1
-# --distributed-executor-backend="ray" \
-# --no-enable-prefix-caching
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0 VLLM_USE_V1=0 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
-    "Qwen/QwQ-32B-AWQ" \
+# --rope-scaling '{"rope_type": "yarn","factor": 4.0,"original_max_position_embeddings": 32768}' \
+# --mm-processor-kwargs '{"max_pixels": 784000}' \
+# --trust-remote-code \
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0 VLLM_USE_V1=0 NCCL_P2P_DISABLE=0 TRANSFORMERS_OFFLINE=1 vllm serve \
+    "OpenGVLab/InternVL3-38B-AWQ" \
     --load-format auto \
+    --limit-mm-per-prompt image=8 \
     --quantization awq \
     --max-model-len 32000 \
+    --trust-remote-code \
     --dtype float16 \
     --gpu-memory-utilization 0.96 \
-    --max_num_seqs 8 \
-    -pp 1 \
+    --max_num_seqs 5 \
     -tp 1 \
     --host 0.0.0.0 \
-    --port 7860
+    --port 8002

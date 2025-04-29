@@ -91,6 +91,11 @@
 # NCCL_P2P_DISABLE=1
 # --distributed-executor-backend="ray" \
 # --no-enable-prefix-caching
+# Qwen/Qwen3-30B-A3B-FP8
+# Qwen/Qwen3-32B-FP8
+# Qwen/Qwen3-235B-A22B-FP8
+# --enable-reasoning --reasoning-parser deepseek_r1
+# fp8_e4m3 
 PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0 VLLM_USE_V1=0 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
     "Qwen/QwQ-32B-AWQ" \
     --load-format auto \

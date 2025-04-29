@@ -89,17 +89,16 @@
 #    -tp 1 \
 # --num-scheduler-steps 8 \
 # NCCL_P2P_DISABLE=1
-# --distributed-executor-backend="ray" \
-# --no-enable-prefix-caching
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0 VLLM_USE_V1=0 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
-    "Qwen/QwQ-32B-AWQ" \
+# --model-impl transformers \ 临时处理，vllm已经fix，等发版
+# --rope-scaling '{"rope_type": "yarn","factor": 4.0,"original_max_position_embeddings": 32768}'
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=3,6 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 TRANSFORMERS_OFFLINE=1 vllm serve \
+    "THUDM/GLM-Z1-Rumination-32B-0414" \
     --load-format auto \
-    --quantization awq \
-    --max-model-len 32000 \
-    --dtype float16 \
+    --rope-scaling '{"rope_type": "yarn","factor": 4.0,"original_max_position_embeddings": 32768}' \
+    --max-model-len 131072 \
+    --dtype bfloat16 \
     --gpu-memory-utilization 0.96 \
-    --max_num_seqs 8 \
-    -pp 1 \
-    -tp 1 \
+    --max_num_seqs 2 \
+    -tp 2 \
     --host 0.0.0.0 \
-    --port 7860
+    --port 8002

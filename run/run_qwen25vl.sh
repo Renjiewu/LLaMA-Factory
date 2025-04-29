@@ -89,17 +89,17 @@
 #    -tp 1 \
 # --num-scheduler-steps 8 \
 # NCCL_P2P_DISABLE=1
-# --distributed-executor-backend="ray" \
-# --no-enable-prefix-caching
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0 VLLM_USE_V1=0 NCCL_P2P_DISABLE=1 TRANSFORMERS_OFFLINE=1 vllm serve \
-    "Qwen/QwQ-32B-AWQ" \
+# --rope-scaling '{"rope_type": "yarn","factor": 4.0,"original_max_position_embeddings": 32768}' \
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=5 VLLM_USE_V1=0 NCCL_P2P_DISABLE=0 TRANSFORMERS_OFFLINE=1 vllm serve \
+    "Qwen/Qwen2.5-VL-32B-Instruct-AWQ" \
     --load-format auto \
+    --limit-mm-per-prompt image=4,video=0 \
+    --mm-processor-kwargs '{"max_pixels": 1605632, "min_pixels": 401408}' \
     --quantization awq \
     --max-model-len 32000 \
     --dtype float16 \
     --gpu-memory-utilization 0.96 \
-    --max_num_seqs 8 \
-    -pp 1 \
+    --max_num_seqs 7 \
     -tp 1 \
     --host 0.0.0.0 \
-    --port 7860
+    --port 8003
