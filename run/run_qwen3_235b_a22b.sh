@@ -105,13 +105,14 @@
 # fp8_e4m3 
 # params: xB * 0.95 (8bit, 4bit*0.5, 16bit*2)
 # 32k 3g vram
+# cognitivecomputations/Qwen3-235B-A22B-AWQ
 PYTHONPATH=/app CUDA_VISIBLE_DEVICES=4,5 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 vllm serve \
-    "cognitivecomputations/Qwen3-30B-A3B-AWQ" \
+    "cognitivecomputations/Qwen3-235B-A22B-AWQ" \
     --load-format auto \
     --max-model-len 32786 \
     --gpu-memory-utilization 0.96 \
     --distributed-executor-backend="mp" \
-    --max_num_seqs 48 \
+    --max_num_seqs 16 \
     -pp 1 \
     -tp 2 \
     --host 0.0.0.0 \

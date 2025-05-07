@@ -91,28 +91,27 @@
 # NCCL_P2P_DISABLE=1
 # --distributed-executor-backend="ray" \
 # --no-enable-prefix-caching
-# Qwen/Qwen3-30B-A3B
+# a800不支持fp8
 # Qwen/Qwen3-30B-A3B-FP8
 # Qwen/Qwen3-32B-FP8
 # Qwen/Qwen3-235B-A22B-FP8
-# khajaphysist/Qwen3-30B-A3B-FP8-Dynamic
-#     "Qwen/Qwen3-30B-A3B" 
-# cognitivecomputations/Qwen3-30B-A3B-AWQ
-# 
-# --enable-reasoning --reasoning-parser deepseek_r1
-# --kv-cache-dtype fp8_e4m3 
+# bnb量化
+# unsloth/Qwen3-30B-A3B-bnb-4bit
+# unsloth/Qwen3-32B-bnb-4bit
+# unsloth/Qwen3-235B-A22B-bnb-4bit
+# Qwen/Qwen3-32B-AWQ
 # --rope-scaling '{"rope_type": "yarn","factor": 4.0,"original_max_position_embeddings": 32768}'
+# --enable-reasoning --reasoning-parser deepseek_r1
+# khajaphysist/Qwen3-32B-FP8-Dynamic
 # fp8_e4m3 
-# params: xB * 0.95 (8bit, 4bit*0.5, 16bit*2)
-# 32k 3g vram
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=4,5 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 vllm serve \
-    "cognitivecomputations/Qwen3-30B-A3B-AWQ" \
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=5 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 vllm serve \
+    "Qwen/Qwen3-32B-AWQ" \
     --load-format auto \
     --max-model-len 32786 \
     --gpu-memory-utilization 0.96 \
+    --max_num_seqs 20 \
     --distributed-executor-backend="mp" \
-    --max_num_seqs 48 \
     -pp 1 \
-    -tp 2 \
+    -tp 1 \
     --host 0.0.0.0 \
-    --port 8000
+    --port 7860

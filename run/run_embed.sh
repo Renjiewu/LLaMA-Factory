@@ -10,12 +10,12 @@
 # # --served-model-name "my_model_name"
 # "Alibaba-NLP/gte-Qwen2-1.5B-instruct" \
 # "BAAI/bge-m3"
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=4 NCCL_P2P_DISABLE=1 vllm serve \
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0 NCCL_P2P_DISABLE=1 vllm serve \
     "Alibaba-NLP/gte-Qwen2-1.5B-instruct" \
     --task embedding \
     --max-model-len 8192 \
     --trust-remote-code \
-    --gpu-memory-utilization 0.07 \
-    --max_num_seqs 16 \
+    --gpu-memory-utilization 0.4 \
+    --max_num_seqs 48 \
     --host 0.0.0.0 \
     --port 8001
