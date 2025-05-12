@@ -182,4 +182,8 @@ output
 .vscode
 .vscode-server
 web_ui_data
+*.swp
+*.tar.gz
 predictions_score.json
+
+tmp/

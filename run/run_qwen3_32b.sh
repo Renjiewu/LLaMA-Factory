@@ -109,7 +109,7 @@ PYTHONPATH=/app CUDA_VISIBLE_DEVICES=5 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_O
     --load-format auto \
     --max-model-len 32786 \
     --gpu-memory-utilization 0.96 \
-    --max_num_seqs 20 \
+    --max-num-seqs 20 \
     --distributed-executor-backend="mp" \
     -pp 1 \
     -tp 1 \
