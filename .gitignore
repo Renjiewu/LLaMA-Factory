@@ -182,3 +182,7 @@ output
 .vscode
 .vscode-server
 web_ui_data
+*.swp
+*.tar.gz
+
+tmp/

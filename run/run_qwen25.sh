@@ -96,7 +96,7 @@ PYTHONPATH=/app CUDA_VISIBLE_DEVICES=4 VLLM_USE_V1=1 NCCL_P2P_DISABLE=1 TRANSFOR
     --max-model-len 32000 \
     --dtype float16 \
     --gpu-memory-utilization 0.90 \
-    --max_num_seqs 7 \
+    --max-num-seqs 7 \
     -tp 1 \
     --host 0.0.0.0 \
     --port 8000
