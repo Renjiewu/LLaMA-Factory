@@ -2,6 +2,7 @@ version: '3.10'
 services:
   llamafactory:
     image: dockerhub.datagrand.com/baize/llamafactory:vllm-v085-gptqmodel-v220
+    # image: dockerhub.datagrand.com/baize/llamafactory:vllm-v074-gptqmodel-v190
     build:
       dockerfile: ./docker/docker-imer/Dockerfile
       context: ../..

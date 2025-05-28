@@ -106,18 +106,21 @@
 # fp8_e4m3 
 # params: xB * 0.95 (8bit, 4bit*0.5, 16bit*2)
 # 32k 3g vram
+# --enforce-eager \
 # --enable-auto-tool-choice --tool-call-parser hermes \
 # --enable-expert-parallel \
 # --enable-reasoning --reasoning-parser deepseek_r1 \
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=6,7 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 vllm serve \
-    "cognitivecomputations/Qwen3-30B-A3B-AWQ" \
+# --quantization gptq \ gptq_bitblas gptq_marlin gptq_marlin_24
+# TORCHDYNAMO_DISABLE=1 
+# CUDA_DEVICE_ORDER=PCI_BUS_ID
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0,1 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 vllm serve \
+    "Qwen/Qwen3-30B-A3B-GPTQ-Int4" \
     --load-format auto \
     --max-model-len 32786 \
     --gpu-memory-utilization 0.96 \
     --distributed-executor-backend="mp" \
-    --enable-expert-parallel \
     --max-num-seqs 48 \
     -pp 1 \
     -tp 2 \
     --host 0.0.0.0 \
-    --port 8000
+    --port 8003
