@@ -166,8 +166,8 @@ cython_debug/
 uv.lock
 
 # custom .gitignore
-ms_cache/
 hf_cache/
+ms_cache/
 om_cache/
 cache/
 config/
@@ -184,5 +184,15 @@ output
 web_ui_data
 *.swp
 *.tar.gz
+
+tmp/
+
+output
+.vscode
+.vscode-server
+web_ui_data
+*.swp
+*.tar.gz
+predictions_score.json
 
 tmp/

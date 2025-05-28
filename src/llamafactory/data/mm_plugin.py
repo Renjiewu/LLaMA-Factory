@@ -57,7 +57,10 @@ if is_transformers_version_greater_than("4.45.0"):
     )
 
 
-if is_transformers_version_greater_than("4.49.0"):
+if is_transformers_version_greater_than("4.52.0"):
+    from transformers.image_utils import make_flat_list_of_images
+    from transformers.video_utils import make_batched_videos
+elif is_transformers_version_greater_than("4.49.0"):
     from transformers.image_utils import make_batched_videos, make_flat_list_of_images
 
 
@@ -167,16 +170,45 @@ class MMPluginMixin:
             )
 
         if self.image_token is not None and processor is None:
-            raise ValueError("Processor was not found, please check and update your processor config.")
+            raise ValueError("Processor was not found, please check and update your model file.")
 
         if self.image_token is not None and image_processor is None:
-            raise ValueError("Image processor was not found, please check and update your processor config.")
+            raise ValueError("Image processor was not found, please check and update your model file.")
 
         if self.video_token is not None and video_processor is None:
-            raise ValueError("Video processor was not found, please check and update your processor config.")
+            raise ValueError("Video processor was not found, please check and update your model file.")
 
         if self.audio_token is not None and feature_extractor is None:
-            raise ValueError("Audio feature extractor was not found, please check and update your processor config.")
+            raise ValueError("Audio feature extractor was not found, please check and update your model file.")
+
+    def _validate_messages(
+        self,
+        messages: list[dict[str, str]],
+        images: list["ImageInput"],
+        videos: list["VideoInput"],
+        audios: list["AudioInput"],
+    ):
+        r"""Validate if the number of images, videos and audios match the number of placeholders in messages."""
+        num_image_tokens, num_video_tokens, num_audio_tokens = 0, 0, 0
+        for message in messages:
+            num_image_tokens += message["content"].count(IMAGE_PLACEHOLDER)
+            num_video_tokens += message["content"].count(VIDEO_PLACEHOLDER)
+            num_audio_tokens += message["content"].count(AUDIO_PLACEHOLDER)
+
+        if len(images) != num_image_tokens:
+            raise ValueError(
+                f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens in {messages}."
+            )
+
+        if len(videos) != num_video_tokens:
+            raise ValueError(
+                f"The number of videos does not match the number of {VIDEO_PLACEHOLDER} tokens in {messages}."
+            )
+
+        if len(audios) != num_audio_tokens:
+            raise ValueError(
+                f"The number of audios does not match the number of {AUDIO_PLACEHOLDER} tokens in {messages}."
+            )
 
     def _preprocess_image(
         self, image: "ImageObject", image_max_pixels: int, image_min_pixels: int, **kwargs
@@ -420,6 +452,7 @@ class Gemma3Plugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens = 0
         messages = deepcopy(messages)
         boi_token: str = getattr(processor, "boi_token")
@@ -445,9 +478,6 @@ class Gemma3Plugin(BasePlugin):
                 num_image_tokens += 1
 
             message["content"] = content.replace("{{image}}", image_str)
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -495,14 +525,14 @@ class InternVLPlugin(BasePlugin):
         mm_inputs = {}
         image_video_patches = []
 
-        if len(images) != 0 and isinstance(images[0], str):
+        if len(images) != 0:
             images = self._regularize_images(
                 images,
                 image_max_pixels=getattr(processor, "image_max_pixels", 1024 * 1024),
                 image_min_pixels=getattr(processor, "image_min_pixels", 32 * 32),
             )["images"]
 
-        if len(videos) != 0 and isinstance(videos[0], str):
+        if len(videos) != 0:
             videos = self._regularize_videos(
                 videos,
                 image_max_pixels=getattr(processor, "video_max_pixels", 256 * 256),
@@ -566,8 +596,8 @@ class InternVLPlugin(BasePlugin):
         processor: Optional["ProcessorMixin"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
-        num_image_tokens = 0
-        num_video_tokens = 0
+        self._validate_messages(messages, images, videos, audios)
+        num_image_tokens, num_video_tokens = 0, 0
         image_seqlen = getattr(processor, "image_seq_length") if self.expand_mm_tokens else 1
         messages = deepcopy(messages)
         mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
@@ -579,9 +609,6 @@ class InternVLPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 content = content.replace(
                     IMAGE_PLACEHOLDER,
                     f"<img>{'<IMG_CONTEXT>' * image_seqlen * image_pixel_patch_list[num_image_tokens]}</img>",
@@ -590,9 +617,6 @@ class InternVLPlugin(BasePlugin):
                 num_image_tokens += 1
 
             while VIDEO_PLACEHOLDER in content:
-                if num_video_tokens >= len(videos):
-                    raise ValueError(f"`len(videos)` is less than the number of {VIDEO_PLACEHOLDER} tokens.")
-
                 current_patch_index = video_patch_indices[num_video_tokens - 1] if num_video_tokens > 0 else 0
                 end_patch_index = video_patch_indices[num_video_tokens]
                 num_patches = list(video_num_patches[current_patch_index:end_patch_index])
@@ -604,12 +628,6 @@ class InternVLPlugin(BasePlugin):
                 num_video_tokens += 1
 
             message["content"] = content
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
-
-        if len(videos) != num_video_tokens:
-            raise ValueError(f"The number of videos does not match the number of {VIDEO_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -637,10 +655,13 @@ class KimiVLPlugin(BasePlugin):
     @override
     def process_messages(self, messages, images, videos, audios, processor):
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         if self.expand_mm_tokens:
             mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
+            image_grid_hws = mm_inputs.get("image_grid_hws", [])
+        else:
+            image_grid_hws = [None] * len(images)
 
-        image_grid_hws = mm_inputs.get("image_grid_hws", [])
         num_image_tokens = 0
         image_processor: BaseImageProcessor = getattr(processor, "image_processor")
         merge_length = math.prod(image_processor.merge_kernel_size)
@@ -648,9 +669,6 @@ class KimiVLPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 image_seqlen = image_grid_hws[num_image_tokens].prod() // merge_length if self.expand_mm_tokens else 1
                 content = content.replace(
                     IMAGE_PLACEHOLDER,
@@ -660,9 +678,6 @@ class KimiVLPlugin(BasePlugin):
                 num_image_tokens += 1
 
             message["content"] = content
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -679,6 +694,7 @@ class Llama4Plugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         if self.expand_mm_tokens:
             mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
             if "pixel_values" in mm_inputs:
@@ -701,9 +717,6 @@ class Llama4Plugin(BasePlugin):
                 for local_image_index, split_part in enumerate(prompt_splits):
                     new_content.append(split_part)
                     if local_image_index < placeholder_count:
-                        if num_image_tokens >= len(images):
-                            raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                         tokens_for_this_image = processor._prompt_split_image(
                             aspect_ratios[num_image_tokens], num_patches_per_chunk
                         )
@@ -715,9 +728,6 @@ class Llama4Plugin(BasePlugin):
                 content = content.replace(IMAGE_PLACEHOLDER, self.image_token)
 
             message["content"] = content
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -751,7 +761,7 @@ class LlavaPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
-        num_image_tokens = 0
+        self._validate_messages(messages, images, videos, audios)
         messages = deepcopy(messages)
         if self.expand_mm_tokens:
             mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
@@ -768,16 +778,9 @@ class LlavaPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 content = content.replace(IMAGE_PLACEHOLDER, "{{image}}" * image_seqlen, 1)
-                num_image_tokens += 1
 
             message["content"] = content.replace("{{image}}", self.image_token)
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -794,6 +797,7 @@ class LlavaNextPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens = 0
         messages = deepcopy(messages)
         if self.expand_mm_tokens:
@@ -805,9 +809,6 @@ class LlavaNextPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 if self.expand_mm_tokens:
                     orig_height, orig_width = next(image_sizes)
                     image_seqlen = processor._get_number_of_features(orig_height, orig_width, height, width)
@@ -820,9 +821,6 @@ class LlavaNextPlugin(BasePlugin):
                 num_image_tokens += 1
 
             message["content"] = content.replace("{{image}}", self.image_token)
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -839,7 +837,7 @@ class LlavaNextVideoPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
-        num_image_tokens, num_video_tokens = 0, 0
+        self._validate_messages(messages, images, videos, audios)
         messages = deepcopy(messages)
         if self.expand_mm_tokens:
             mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
@@ -850,9 +848,6 @@ class LlavaNextVideoPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 if self.expand_mm_tokens:
                     orig_height, orig_width = next(image_sizes)
                     image_seqlen = processor._get_number_of_features(orig_height, orig_width, height, width)
@@ -862,7 +857,6 @@ class LlavaNextVideoPlugin(BasePlugin):
                     image_seqlen = 1
 
                 content = content.replace(IMAGE_PLACEHOLDER, "{{image}}" * image_seqlen, 1)
-                num_image_tokens += 1
 
             message["content"] = content.replace("{{image}}", self.image_token)
 
@@ -879,19 +873,9 @@ class LlavaNextVideoPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while VIDEO_PLACEHOLDER in content:
-                if num_video_tokens >= len(videos):
-                    raise ValueError(f"`len(videos)` is less than the number of {VIDEO_PLACEHOLDER} tokens.")
-
                 content = content.replace(VIDEO_PLACEHOLDER, "{{video}}" * video_seqlen, 1)
-                num_video_tokens += 1
 
             message["content"] = content.replace("{{video}}", self.video_token)
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
-
-        if len(videos) != num_video_tokens:
-            raise ValueError(f"The number of videos does not match the number of {VIDEO_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -978,6 +962,7 @@ class MiniCPMVPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens, num_video_tokens, num_audio_tokens = 0, 0, 0
         messages = deepcopy(messages)
         image_processor: BaseImageProcessor = getattr(processor, "image_processor")
@@ -996,24 +981,15 @@ class MiniCPMVPlugin(BasePlugin):
         for i, message in enumerate(messages):
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 content = content.replace(IMAGE_PLACEHOLDER, "{{image}}", 1)
                 num_image_tokens += 1
 
             while VIDEO_PLACEHOLDER in content:
-                if num_video_tokens >= len(videos):
-                    raise ValueError(f"`len(videos)` is less than the number of {VIDEO_PLACEHOLDER} tokens.")
-
                 video_seqlen = len(mm_inputs["pixel_values"][num_video_tokens]) if self.expand_mm_tokens else 1
                 content = content.replace(VIDEO_PLACEHOLDER, "{{image}}" * video_seqlen, 1)
                 num_video_tokens += 1
 
             while AUDIO_PLACEHOLDER in content:
-                if num_audio_tokens >= len(audios):
-                    raise ValueError(f"`len(audios)` is less than the number of {AUDIO_PLACEHOLDER} tokens.")
-
                 content = content.replace(AUDIO_PLACEHOLDER, "{{audio}}", 1)
                 num_audio_tokens += 1
 
@@ -1064,15 +1040,6 @@ class MiniCPMVPlugin(BasePlugin):
 
                 final_text += text_chunks[-1]
                 messages[index]["content"] = final_text
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
-
-        if len(videos) != num_video_tokens:
-            raise ValueError(f"The number of videos does not match the number of {VIDEO_PLACEHOLDER} tokens.")
-
-        if len(audios) != num_audio_tokens:
-            raise ValueError(f"The number of audios does not match the number of {AUDIO_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -1157,15 +1124,13 @@ class MllamaPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens = 0
         messages = deepcopy(messages)
         for message in messages:
             content = message["content"]
             num_image_tokens += content.count(IMAGE_PLACEHOLDER)
             message["content"] = content.replace(IMAGE_PLACEHOLDER, self.image_token)
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -1214,6 +1179,7 @@ class PaliGemmaPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens = 0
         messages = deepcopy(messages)
         for message in messages:
@@ -1223,9 +1189,6 @@ class PaliGemmaPlugin(BasePlugin):
                 num_image_tokens += 1
 
             message["content"] = content
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -1281,7 +1244,7 @@ class PixtralPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
-        num_image_tokens = 0
+        self._validate_messages(messages, images, videos, audios)
         messages = deepcopy(messages)
         if self.expand_mm_tokens:
             mm_inputs = self._get_mm_inputs(images, videos, audios, processor)
@@ -1291,15 +1254,13 @@ class PixtralPlugin(BasePlugin):
                     image_sizes = iter(mm_inputs["image_sizes"][0])
                 else:
                     image_sizes = iter(mm_inputs["image_sizes"].tolist())
+
                 image_break_token: str = getattr(processor, "image_break_token")
                 image_end_token: str = getattr(processor, "image_end_token")
 
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 if self.expand_mm_tokens:
                     height, width = next(image_sizes)
                     num_height_tokens = height // processor.patch_size
@@ -1312,12 +1273,8 @@ class PixtralPlugin(BasePlugin):
                     replace_str = self.image_token
 
                 content = content.replace(IMAGE_PLACEHOLDER, replace_str, 1)
-                num_image_tokens += 1
 
             message["content"] = content
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -1355,9 +1312,9 @@ class Qwen2AudioPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         bos_token: str = getattr(processor, "audio_bos_token")
         eos_token: str = getattr(processor, "audio_eos_token")
-        num_audio_tokens = 0
         messages = deepcopy(messages)
         if self.expand_mm_tokens:
             mm_inputs = self._get_mm_inputs([], [], audios, processor)
@@ -1367,9 +1324,6 @@ class Qwen2AudioPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while AUDIO_PLACEHOLDER in content:
-                if num_audio_tokens >= len(audios):
-                    raise ValueError(f"`len(audios)` is less than the number of {AUDIO_PLACEHOLDER} tokens.")
-
                 if self.expand_mm_tokens:
                     audio_length = audio_lengths.pop(0)
                     input_length = (audio_length - 1) // 2 + 1
@@ -1380,12 +1334,8 @@ class Qwen2AudioPlugin(BasePlugin):
                 content = content.replace(
                     AUDIO_PLACEHOLDER, f"{bos_token}{self.audio_token * audio_seqlen}{eos_token}", 1
                 )
-                num_audio_tokens += 1
 
             message["content"] = content
-
-        if len(audios) != num_audio_tokens:
-            raise ValueError(f"The number of audios does not match the number of {AUDIO_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -1494,6 +1444,7 @@ class Qwen2VLPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens, num_video_tokens = 0, 0
         messages = deepcopy(messages)
         image_processor: BaseImageProcessor = getattr(processor, "image_processor")
@@ -1510,9 +1461,6 @@ class Qwen2VLPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 image_seqlen = image_grid_thw[num_image_tokens].prod() // merge_length if self.expand_mm_tokens else 1
                 content = content.replace(
                     IMAGE_PLACEHOLDER, f"<|vision_start|>{self.image_token * image_seqlen}<|vision_end|>", 1
@@ -1520,9 +1468,6 @@ class Qwen2VLPlugin(BasePlugin):
                 num_image_tokens += 1
 
             while VIDEO_PLACEHOLDER in content:
-                if num_video_tokens >= len(videos):
-                    raise ValueError(f"`len(videos)` is less than the number of {VIDEO_PLACEHOLDER} tokens.")
-
                 video_seqlen = video_grid_thw[num_video_tokens].prod() // merge_length if self.expand_mm_tokens else 1
                 content = content.replace(
                     VIDEO_PLACEHOLDER, f"<|vision_start|>{self.video_token * video_seqlen}<|vision_end|>", 1
@@ -1530,12 +1475,6 @@ class Qwen2VLPlugin(BasePlugin):
                 num_video_tokens += 1
 
             message["content"] = content
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
-
-        if len(videos) != num_video_tokens:
-            raise ValueError(f"The number of videos does not match the number of {VIDEO_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -1602,6 +1541,7 @@ class Qwen2OmniPlugin(Qwen2VLPlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens, num_video_tokens, num_audio_tokens = 0, 0, 0
         messages = deepcopy(messages)
         image_processor: BaseImageProcessor = getattr(processor, "image_processor", None)
@@ -1624,9 +1564,6 @@ class Qwen2OmniPlugin(Qwen2VLPlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 image_seqlen = image_grid_thw[num_image_tokens].prod() // merge_length if self.expand_mm_tokens else 1
                 content = content.replace(
                     IMAGE_PLACEHOLDER, f"<|vision_bos|>{self.image_token * image_seqlen}<|vision_eos|>", 1
@@ -1642,11 +1579,6 @@ class Qwen2OmniPlugin(Qwen2VLPlugin):
                     )
 
                 while VIDEO_PLACEHOLDER in content:
-                    if num_video_tokens >= len(videos):
-                        raise ValueError(f"`len(videos)` is less than the number of {VIDEO_PLACEHOLDER} tokens.")
-                    if num_audio_tokens >= len(audios):
-                        raise ValueError(f"`len(audios)` is less than the number of {AUDIO_PLACEHOLDER} tokens.")
-
                     video_pos = content.find(VIDEO_PLACEHOLDER)
                     audio_pos = content.find(AUDIO_PLACEHOLDER, video_pos)
                     if audio_pos == -1 or audio_pos < video_pos:
@@ -1688,9 +1620,6 @@ class Qwen2OmniPlugin(Qwen2VLPlugin):
                     num_video_tokens += 1
             else:
                 while AUDIO_PLACEHOLDER in content:
-                    if num_audio_tokens >= len(audios):
-                        raise ValueError(f"`len(audios)` is less than the number of {AUDIO_PLACEHOLDER} tokens.")
-
                     audio_seqlen = audio_lengths[num_audio_tokens] if self.expand_mm_tokens else 1
                     content = content.replace(
                         AUDIO_PLACEHOLDER, f"<|audio_bos|>{self.audio_token * audio_seqlen}<|audio_eos|>", 1
@@ -1698,9 +1627,6 @@ class Qwen2OmniPlugin(Qwen2VLPlugin):
                     num_audio_tokens += 1
 
                 while VIDEO_PLACEHOLDER in content:
-                    if num_video_tokens >= len(videos):
-                        raise ValueError(f"`len(videos)` is less than the number of {VIDEO_PLACEHOLDER} tokens.")
-
                     video_seqlen = (
                         video_grid_thw[num_video_tokens].prod() // merge_length if self.expand_mm_tokens else 1
                     )
@@ -1710,15 +1636,6 @@ class Qwen2OmniPlugin(Qwen2VLPlugin):
                     num_video_tokens += 1
 
             message["content"] = content
-
-        if len(audios) != num_audio_tokens:
-            raise ValueError(f"The number of audios does not match the number of {AUDIO_PLACEHOLDER} tokens.")
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
-
-        if len(videos) != num_video_tokens:
-            raise ValueError(f"The number of videos does not match the number of {VIDEO_PLACEHOLDER} tokens.")
 
         return messages
 
@@ -1735,6 +1652,7 @@ class VideoLlavaPlugin(BasePlugin):
         processor: Optional["MMProcessor"],
     ) -> list[dict[str, str]]:
         self._validate_input(processor, images, videos, audios)
+        self._validate_messages(messages, images, videos, audios)
         num_image_tokens, num_video_tokens = 0, 0
         messages = deepcopy(messages)
         num_frames = 0
@@ -1762,27 +1680,15 @@ class VideoLlavaPlugin(BasePlugin):
         for message in messages:
             content = message["content"]
             while IMAGE_PLACEHOLDER in content:
-                if num_image_tokens >= len(images):
-                    raise ValueError(f"`len(images)` is less than the number of {IMAGE_PLACEHOLDER} tokens.")
-
                 content = content.replace(IMAGE_PLACEHOLDER, "{{image}}" * image_seqlen, 1)
                 num_image_tokens += 1
 
             while VIDEO_PLACEHOLDER in content:
-                if num_video_tokens >= len(videos):
-                    raise ValueError(f"`len(videos)` is less than the number of {VIDEO_PLACEHOLDER} tokens.")
-
                 content = content.replace(VIDEO_PLACEHOLDER, "{{video}}" * video_seqlen, 1)
                 num_video_tokens += 1
 
             content = content.replace("{{image}}", self.image_token)
             message["content"] = content.replace("{{video}}", self.video_token)
-
-        if len(images) != num_image_tokens:
-            raise ValueError(f"The number of images does not match the number of {IMAGE_PLACEHOLDER} tokens.")
-
-        if len(videos) != num_video_tokens:
-            raise ValueError(f"The number of videos does not match the number of {VIDEO_PLACEHOLDER} tokens.")
 
         return messages
 
