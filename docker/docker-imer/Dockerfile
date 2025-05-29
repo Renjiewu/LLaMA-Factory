@@ -3,7 +3,8 @@
 # ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:24.02-py3
 # ARG BASE_IMAGE=vllm/vllm-openai:v0.7.3
 # ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.4
-ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.5
+# ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.5
+ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.0
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]
@@ -50,7 +51,7 @@ RUN pip config set global.index-url "$PIP_INDEX" && \
 # Copy the rest of the application into the image
 COPY . /app
 
-RUN apt install -y cuda-nvcc-12-4 && pip install webdav4 wandb
+RUN pip install webdav4 wandb
 
 # Install the LLaMA Factory
 RUN EXTRA_PACKAGES="metrics"; \
@@ -87,7 +88,7 @@ RUN pip uninstall -y transformer-engine flash-attn && \
             pip install --proxy=$HTTP_PROXY --no-cache-dir flash-attn --no-build-isolation; \
         else \
             pip install ninja && \
-            pip install --no-cache-dir flash-attn --no-build-isolation; \
+            pip install --no-cache-dir flash-attn --use-pep517 --no-build-isolation; \
         fi; \
     fi
 

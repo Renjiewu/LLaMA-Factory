@@ -110,16 +110,24 @@
 # --enable-auto-tool-choice --tool-call-parser hermes \
 # --enable-expert-parallel \
 # --enable-reasoning --reasoning-parser deepseek_r1 \
+# --reasoning-parser qwen3 \
 # --quantization gptq \ gptq_bitblas gptq_marlin gptq_marlin_24
 # TORCHDYNAMO_DISABLE=1 
 # CUDA_DEVICE_ORDER=PCI_BUS_ID
-PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0,1 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 vllm serve \
+# --distributed-executor-backend="mp" \
+# --dtype float16 \
+# --enable-expert-parallel \
+# --use_cudagraph false \
+# --load-format auto \
+# CUDA_LAUNCH_BLOCKING=1 TORCH_USE_CUDA_DSA=1
+# VLLM_ATTENTION_BACKEND=FLASH_ATTN_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=0
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=4,5 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 VLLM_ATTENTION_BACKEND=FLASHINFER_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=1 vllm serve \
     "Qwen/Qwen3-30B-A3B-GPTQ-Int4" \
-    --load-format auto \
     --max-model-len 32786 \
     --gpu-memory-utilization 0.96 \
-    --distributed-executor-backend="mp" \
     --max-num-seqs 48 \
+    --enable-expert-parallel \
+    --dtype bfloat16 \
     -pp 1 \
     -tp 2 \
     --host 0.0.0.0 \

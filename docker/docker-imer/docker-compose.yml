@@ -1,7 +1,8 @@
 version: '3.10'
 services:
   llamafactory:
-    image: dockerhub.datagrand.com/baize/llamafactory:vllm-v085-gptqmodel-v220
+    image: dockerhub.datagrand.com/baize/llamafactory:vllm-v090
+    # image: dockerhub.datagrand.com/baize/llamafactory:vllm-v085-gptqmodel-v220
     # image: dockerhub.datagrand.com/baize/llamafactory:vllm-v074-gptqmodel-v190
     build:
       dockerfile: ./docker/docker-imer/Dockerfile
@@ -9,7 +10,7 @@ services:
       args:
         INSTALL_BNB: false
         INSTALL_VLLM: false
-        INSTALL_DEEPSPEED: true
+        INSTALL_DEEPSPEED: false
         INSTALL_FLASHATTN: true
         INSTALL_LIGER_KERNEL: false
         INSTALL_HQQ: false
