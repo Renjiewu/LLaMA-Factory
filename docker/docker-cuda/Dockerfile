@@ -1,5 +1,5 @@
 # https://hub.docker.com/r/hiyouga/pytorch/tags
-ARG BASE_IMAGE=hiyouga/pytorch:th2.6.0-cu124-flashattn2.7.4-cxx11abi0
+ARG BASE_IMAGE=hiyouga/pytorch:th2.6.0-cu124-flashattn2.7.4-cxx11abi0-devel
 FROM ${BASE_IMAGE}
 
 # Installation arguments
@@ -18,13 +18,16 @@ ENV PIP_ROOT_USER_ACTION=ignore
 ENV http_proxy="${HTTP_PROXY}"
 ENV https_proxy="${HTTP_PROXY}"
 
+# Use Bash instead of default /bin/sh
+SHELL ["/bin/bash", "-c"]
+
 # Set the working directory
 WORKDIR /app
 
 # Change pip source
 RUN pip config set global.index-url "${PIP_INDEX}" && \
     pip config set global.extra-index-url "${PIP_INDEX}" && \
-    python -m pip install --upgrade pip
+    pip install --no-cache-dir --upgrade pip packaging wheel setuptools
 
 # Install the requirements
 COPY requirements.txt /app
@@ -44,7 +47,7 @@ RUN if [ "${INSTALL_FLASHATTN}" == "true" ]; then \
     fi
 
 # Set up volumes
-VOLUME [ "/root/.cache/huggingface", "/root/.cache/modelscope", "/root/.cache/openmind", "/app/data", "/app/output" ]
+# VOLUME [ "/root/.cache/huggingface", "/app/shared_data", "/app/output" ]
 
 # Expose port 7860 for LLaMA Board
 ENV GRADIO_SERVER_PORT=7860
