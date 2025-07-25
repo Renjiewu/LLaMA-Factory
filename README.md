@@ -5,7 +5,7 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/hiyouga/LLaMA-Factory?color=orange)](https://github.com/hiyouga/LLaMA-Factory/graphs/contributors)
 [![GitHub workflow](https://github.com/hiyouga/LLaMA-Factory/actions/workflows/tests.yml/badge.svg)](https://github.com/hiyouga/LLaMA-Factory/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/llamafactory)](https://pypi.org/project/llamafactory/)
-[![Citation](https://img.shields.io/badge/citation-651-green)](https://scholar.google.com/scholar?cites=12620864006390196564)
+[![Citation](https://img.shields.io/badge/citation-730-green)](https://scholar.google.com/scholar?cites=12620864006390196564)
 [![Docker Pulls](https://img.shields.io/docker/pulls/hiyouga/llamafactory)](https://hub.docker.com/r/hiyouga/llamafactory/tags)
 
 [![Twitter](https://img.shields.io/twitter/follow/llamafactory_ai)](https://twitter.com/llamafactory_ai)
@@ -272,6 +272,7 @@ Choose your path:
 | [GLM-4.1V](https://huggingface.co/THUDM)*                         | 9B                               | glm4v               |
 | [GPT-2](https://huggingface.co/openai-community)                  | 0.1B/0.4B/0.8B/1.5B              | -                   |
 | [Granite 3.0-3.3](https://huggingface.co/ibm-granite)             | 1B/2B/3B/8B                      | granite3            |
+| [Granite 4](https://huggingface.co/ibm-granite)                   | 7B                               | granite4            |
 | [Hunyuan](https://huggingface.co/tencent/)                        | 7B                               | hunyuan             |
 | [Index](https://huggingface.co/IndexTeam)                         | 1.9B                             | index               |
 | [InternLM 2-3](https://huggingface.co/internlm)                   | 7B/8B/20B                        | intern2             |
@@ -626,7 +627,7 @@ Please refer to [data/README.md](data/README.md) for checking the details about 
 > [!NOTE]
 > Please update `data/dataset_info.json` to use your custom dataset.
 
-You can also use **[Easy Dataset](https://github.com/ConardLi/easy-dataset)** or **[GraphGen](https://github.com/open-sciencelab/GraphGen)** to create synthetic data for fine-tuning.
+You can also use **[Easy Dataset](https://github.com/ConardLi/easy-dataset)**, **[DataFlow](https://github.com/OpenDCAI/DataFlow)** and **[GraphGen](https://github.com/open-sciencelab/GraphGen)** to create synthetic data for fine-tuning.
 
 ### Quickstart
 
