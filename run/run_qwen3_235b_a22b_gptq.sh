@@ -121,16 +121,14 @@
 # --load-format auto \
 # CUDA_LAUNCH_BLOCKING=1 TORCH_USE_CUDA_DSA=1
 # VLLM_ATTENTION_BACKEND=FLASH_ATTN_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=0
-PYTHONPATH=/app OMP_NUM_THREADS=8 CUDA_VISIBLE_DEVICES=7 VLLM_USE_V1=1 NCCL_P2P_DISABLE=1 HF_HUB_OFFLINE=0 VLLM_ATTENTION_BACKEND=FLASHINFER_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=1 vllm serve \
-    "Qwen/Qwen3-30B-A3B-GPTQ-Int4" \
+PYTHONPATH=/app OMP_NUM_THREADS=8 CUDA_VISIBLE_DEVICES=2,3 VLLM_USE_V1=1 NCCL_P2P_DISABLE=1 HF_HUB_OFFLINE=0 VLLM_ATTENTION_BACKEND=FLASHINFER_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=1 vllm serve \
+    "Qwen/Qwen3-235B-A22B-GPTQ-Int4" \
     --max-model-len 32786 \
     --gpu-memory-utilization 0.96 \
-    --enable-auto-tool-choice --tool-call-parser hermes \
-    --enable-reasoning --reasoning-parser qwen3 \
-    --max-num-seqs 20 \
+    --max-num-seqs 6 \
     --enable-expert-parallel \
     --dtype float16 \
     -pp 1 \
-    -tp 1 \
+    -tp 2 \
     --host 0.0.0.0 \
     --port 8002
