@@ -6,7 +6,8 @@
 # ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.8.5
 # ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.0
 # ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.1
-ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.2
+# ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.2
+ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.10.0
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]

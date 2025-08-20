@@ -187,3 +187,4 @@ web_ui_data
 predictions_score.json
 
 tmp/
+data/models
