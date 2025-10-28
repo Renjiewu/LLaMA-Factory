@@ -1,0 +1,2 @@
+CUDA_VISIBLE_DEVICES=0 PYTORCH_ALLOC_CONF=expandable_segments:False UNSLOTH_VLLM_STANDBY=1 CUDA_LAUNCH_BLOCKING=1 python3 /app/run/unsloth_test.py
+

@@ -121,11 +121,10 @@
 # --load-format auto \
 # CUDA_LAUNCH_BLOCKING=1 TORCH_USE_CUDA_DSA=1
 # VLLM_ATTENTION_BACKEND=FLASH_ATTN_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=0
-PYTHONPATH=/app vllm bench serve \
-    --model "Qwen/Qwen3-Next-80B-A3B-Thinking" \
-    --random-input-len 8192 \
-    --random-output-len 1024 \
-    --num-prompts 20 \
-    --max-concurrency 10 \
-    --host 0.0.0.0 \
-    --port 8002
+PYTHONPATH=/app OMP_NUM_THREADS=8 CUDA_VISIBLE_DEVICES=0,1,2,3 python3 /app/run/benchmark_moe.py \
+    --model "Qwen/Qwen3-30B-A3B-GPTQ-Int4" \
+    -tp 4 \
+    --enable-expert-parallel \
+    --tune \
+    --save-dir /app/data/add_pkg/fuse_moe
+

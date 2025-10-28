@@ -91,41 +91,28 @@
 # NCCL_P2P_DISABLE=1
 # --distributed-executor-backend="ray" \
 # --no-enable-prefix-caching
-# Qwen/Qwen3-30B-A3B
+# a800不支持fp8
 # Qwen/Qwen3-30B-A3B-FP8
 # Qwen/Qwen3-32B-FP8
 # Qwen/Qwen3-235B-A22B-FP8
-# khajaphysist/Qwen3-30B-A3B-FP8-Dynamic
-#     "Qwen/Qwen3-30B-A3B" 
-# cognitivecomputations/Qwen3-30B-A3B-AWQ
-# Qwen/Qwen3-30B-A3B-GPTQ-Int4
-# 
-# --enable-reasoning --reasoning-parser deepseek_r1
-# --kv-cache-dtype fp8_e4m3 
+# bnb量化
+# unsloth/Qwen3-30B-A3B-bnb-4bit
+# unsloth/Qwen3-32B-bnb-4bit
+# unsloth/Qwen3-235B-A22B-bnb-4bit
+# Qwen/Qwen3-32B-AWQ
 # --rope-scaling '{"rope_type": "yarn","factor": 4.0,"original_max_position_embeddings": 32768}'
+# --enable-reasoning --reasoning-parser deepseek_r1
+# khajaphysist/Qwen3-32B-FP8-Dynamic
 # fp8_e4m3 
-# params: xB * 0.95 (8bit, 4bit*0.5, 16bit*2)
-# 32k 3g vram
-# --enforce-eager \
-# --enable-auto-tool-choice --tool-call-parser hermes \
-# --enable-expert-parallel \
-# --enable-reasoning --reasoning-parser deepseek_r1 \
-# --reasoning-parser qwen3 \
-# --quantization gptq \ gptq_bitblas gptq_marlin gptq_marlin_24
-# TORCHDYNAMO_DISABLE=1 
-# CUDA_DEVICE_ORDER=PCI_BUS_ID
-# --distributed-executor-backend="mp" \
-# --dtype float16 \
-# --enable-expert-parallel \
-# --use_cudagraph false \
-# --load-format auto \
-# CUDA_LAUNCH_BLOCKING=1 TORCH_USE_CUDA_DSA=1
-# VLLM_ATTENTION_BACKEND=FLASH_ATTN_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=0
-PYTHONPATH=/app vllm bench serve \
-    --model "Qwen/Qwen3-Next-80B-A3B-Thinking" \
-    --random-input-len 8192 \
-    --random-output-len 1024 \
-    --num-prompts 20 \
-    --max-concurrency 10 \
+PYTHONPATH=/app OMP_NUM_THREADS=8 CUDA_VISIBLE_DEVICES=0 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 VLLM_ATTENTION_BACKEND=FLASH_ATTN python /app/run/debug_vllm.py serve \
+    "Qwen/Qwen3-8B" \
+    --load-format auto \
+    --max-model-len 32786 \
+    --gpu-memory-utilization 0.96 \
+    --enforce-eager \
+    --max-num-seqs 40 \
+    --distributed-executor-backend="mp" \
+    -pp 1 \
+    -tp 1 \
     --host 0.0.0.0 \
-    --port 8002
+    --port 7860

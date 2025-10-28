@@ -188,3 +188,6 @@ predictions_score.json
 
 tmp/
 data/models
+data/add_pkg
+run/rl
+data/rl_data

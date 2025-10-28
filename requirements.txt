@@ -3,14 +3,14 @@ transformers>=4.49.0,<=4.55.0,!=4.52.0
 datasets>=2.16.0,<=3.6.0
 accelerate>=1.3.0,<=1.7.0
 peft>=0.14.0,<=0.15.2
-trl>=0.8.6,<=0.9.6
+trl>=0.8.6,<=0.21.0
 tokenizers>=0.19.0,<=0.21.1
 # gui
 gradio>=4.38.0,<=5.42.0
 matplotlib>=3.7.0
 # ops
 einops
-pandas>=2.0.0
+pandas>=2.0.0ßßßßßß
 scipy
 # model and tokenizer
 sentencepiece
@@ -24,7 +24,7 @@ omegaconf
 packaging
 protobuf
 pyyaml
-numpy
+numpy <= 2.3.0
 pydantic
 # api
 uvicorn

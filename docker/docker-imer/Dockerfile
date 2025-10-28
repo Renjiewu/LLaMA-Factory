@@ -7,7 +7,8 @@
 # ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.0
 # ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.1
 # ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.9.2
-ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.10.0
+# ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.10.0
+ARG BASE_IMAGE=docker.1ms.run/vllm/vllm-openai:v0.10.1.1
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]
@@ -62,6 +63,8 @@ RUN EXTRA_PACKAGES="metrics"; \
         EXTRA_PACKAGES="${EXTRA_PACKAGES},bitsandbytes"; \
     fi; \
     if [ "$INSTALL_VLLM" == "true" ]; then \
+        EXTRA_PACKAGES="${EXTRA_PACKAGES},vllm"; \
+    if [ "$INSTALL_VLLM" == "dev" ]; then \
         EXTRA_PACKAGES="${EXTRA_PACKAGES},vllm"; \
     fi; \
     if [ "$INSTALL_DEEPSPEED" == "true" ]; then \
