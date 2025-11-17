@@ -2,7 +2,7 @@ version: '3.10'
 services:
   llamafactory:
     # image: dockerhub.datagrand.com/baize/unsloth:vllm-v0102
-    image: modelscope-registry.us-west-1.cr.aliyuncs.com/modelscope-repo/modelscope:ubuntu22.04-cuda12.8.1-py311-torch2.8.0-vllm0.11.0-modelscope1.31.0-swift3.9.1
+    image: modelscope-registry.cn-hangzhou.cr.aliyuncs.com/modelscope-repo/modelscope:ubuntu22.04-cuda12.8.1-py311-torch2.8.0-vllm0.11.0-modelscope1.31.0-swift3.9.3
     # image: docker.1ms.run/vllm/vllm-openai:v0.11.0
     # image: docker.1ms.run/vllm/vllm-openai:v0.10.2
     # image: dockerhub.datagrand.com/baize/vllm:vllm-dev
@@ -22,7 +22,7 @@ services:
       # context: ../..
       # args:
     #     # llamafactory build args
-    #     INSTALL_BNB: false˜
+    #     INSTALL_BNB: false
     #     INSTALL_VLLM: false
     #     INSTALL_DEEPSPEED: false
     #     INSTALL_FLASHATTN: true
@@ -55,7 +55,8 @@ services:
       - ../../.vscode:/app/.vscode
       - /mnt/text_mining_group/hujiajie/data/models:/data/models
       - /mnt/text_mining_group/hujiajie/data/dataset:/data/dataset
-      - /home/idps/wurenjie/verl:/app/verl
+      # - /home/idps/wurenjie/verl:/app/verl
+      - /home/idps/wurenjie/ms-swift:/app/ms-swift
       - /home/idps/wurenjie/learn:/app/learn
     ports:
       - "37860:7860"

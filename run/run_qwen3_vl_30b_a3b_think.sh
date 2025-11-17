@@ -106,35 +106,20 @@
 # fp8_e4m3 
 # params: xB * 0.95 (8bit, 4bit*0.5, 16bit*2)
 # 32k 3g vram
-# --enforce-eager \
 # --enable-auto-tool-choice --tool-call-parser hermes \
 # --enable-expert-parallel \
 # --enable-reasoning --reasoning-parser deepseek_r1 \
-# --reasoning-parser qwen3 \
-# --quantization gptq \ gptq_bitblas gptq_marlin gptq_marlin_24
-# TORCHDYNAMO_DISABLE=1 
-# CUDA_DEVICE_ORDER=PCI_BUS_ID
-# --distributed-executor-backend="mp" \
-# --dtype float16 \
-# --enable-expert-parallel \
-# --use_cudagraph false \
-# --load-format auto \
-# CUDA_LAUNCH_BLOCKING=1 TORCH_USE_CUDA_DSA=1
-# VLLM_ATTENTION_BACKEND=FLASH_ATTN_VLLM_V1 VLLM_USE_FLASHINFER_SAMPLER=0
-# sed -i '/^from vllm\.entrypoints\.cli\.main import main$/a\
-# from dots_ocr import modeling_dots_ocr_vllm' `which vllm`
-# --limit-mm-per-prompt '{"image":4,"video":1}' \
-OMP_NUM_THREADS=8 CUDA_VISIBLE_DEVICES=1 NCCL_P2P_DISABLE=1 HF_HUB_OFFLINE=0 VLLM_USE_MODELSCOPE=False vllm serve \
-    "rednote-hilab/dots.ocr" \
-    --limit-mm-per-prompt '{"image":10,"video":0}' \
-    --mm-processor-kwargs '{"max_pixels": 1605632, "min_pixels": 401408}' \
-    --max-model-len 131072 \
-    --gpu-memory-utilization 0.5 \
-    --chat-template-content-format string \
-    --served-model-name dots-ocr \
-    --trust-remote-code \
+PYTHONPATH=/app CUDA_VISIBLE_DEVICES=0,1 VLLM_USE_V1=1 NCCL_P2P_DISABLE=0 HF_HUB_OFFLINE=0 vllm serve \
+    "Qwen/Qwen3-VL-30B-A3B-Thinking" \
+    --load-format auto \
+    --gpu-memory-utilization 0.96 \
+    --enable-auto-tool-choice --tool-call-parser hermes \
+    --reasoning-parser qwen3 \
     --max-num-seqs 20 \
+    --dtype float16 \
+    --distributed-executor-backend="mp" \
+    --enable-expert-parallel \
     -pp 1 \
-    -tp 1 \
+    -tp 2 \
     --host 0.0.0.0 \
-    --port 8004
+    --port 8000
